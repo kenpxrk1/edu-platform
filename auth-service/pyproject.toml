@@ -1,0 +1,20 @@
+[tool.poetry]
+name = "edu-auth-service"
+version = "0.1.0"
+description = "auth service for education platform"
+authors = ["y"]
+license = "MIT"
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.10"
+fastapi = "^0.111.0"
+SQLAlchemy = "^2.0.30"
+pytest = "^8.2.2"
+pytest-asyncio = "^0.23.7"
+alembic = "^1.13.1"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
