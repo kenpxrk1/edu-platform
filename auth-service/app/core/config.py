@@ -1,25 +1,29 @@
-from pydantic import BaseModel
+import os
+from pydantic_settings import SettingsConfigDict, BaseSettings
 
+ENV_FILE = os.path.join(os.path.dirname(__file__), '.env')
 
-class DBConfig(BaseModel):
-    __DB_HOST: str
-    __DB_PORT: str
-    __DB_USER: str
-    __DB_PASS: str
-    __DB_NAME: str 
+class DBConfig(BaseSettings):
+    DB_HOST: str 
+    DB_PORT: str
+    DB_USER: str
+    DB_PASS: str
+    DB_NAME: str 
 
     @property
-    def DB_URL(self):
-        return f"postgresql+asyncpg://{self.__DB_USER}:{self.__DB_PASS}@{self.__DB_HOST}:{self.__DB_PORT}/{self.__DB_NAME}"
+    def DB_URL(self) -> str:
+        return f"postgresql+asyncpg://{self.DB_USER}:{self.DB_PASS}@{self.DB_HOST}:{self.DB_PORT}/{self.DB_NAME}"
+    
+    model_config = SettingsConfigDict(env_file=ENV_FILE, extra='allow')
 
 
 db_config = DBConfig()
 
 
-class AuthConfig(BaseModel):
-    __SECRET_KEY: str
-    __ALGORITHM: str
-    __ACCESS_TOKEN_EXPIRE_MINUTES: int 
+class AuthConfig(BaseSettings):
+    SECRET_KEY: str
+    ALGORITHM: str
+    ACCESS_TOKEN_EXPIRE_MINUTES: int 
 
     @property
     def SECRET_KEY(self):
@@ -32,3 +36,5 @@ class AuthConfig(BaseModel):
     @property
     def ACCESS_TOKEN_EXPIRE_MINUTES(self):
         return self.__ACCESS_TOKEN_EXPIRE_MINUTES
+    
+    model_config = SettingsConfigDict(env_file=ENV_FILE)
