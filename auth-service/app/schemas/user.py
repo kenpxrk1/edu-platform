@@ -13,7 +13,7 @@ class CreateUser(BaseModel):
     name: str 
     surname: str
     password: str
-    birth_date: dt.date
+    date_of_birth: dt.date
 
     @field_validator('name', 'surname')
     def name_validator(value: str):
@@ -63,21 +63,22 @@ class CreateUser(BaseModel):
         return password
         
 
-    @field_validator('birth_date')
-    def birth_date_validator(birth_date: dt.date):
+    @field_validator('date_of_birth')
+    def date_of_birth_validator(date_of_birth: dt.date):
         current_date =  dt.date.today()
         
-        if birth_date > current_date:
+        if date_of_birth > current_date:
             raise HTTPException(
                 status_code=400,
                 detail="Дата рождения не может быть позже чем текущая дата."
             )
         
-        if abs(int(current_date.year) - int(birth_date.year)) >= 115: 
+        if abs(int(current_date.year) - int(date_of_birth.year)) >= 115: 
             raise HTTPException(
                 status_code=400,
                 detail="Недопустимая дата рождения"
             )
+        return date_of_birth
 
 
 
@@ -92,7 +93,28 @@ class GetUser(BaseModel):
     surname: str
     email: str 
     role: Role
-    birth_date: str
+    date_of_birth: dt.date
 
-class UpdateUser(CreateUser):
-    pass 
+class UpdateUser(BaseModel):
+    name: str 
+    surname: str 
+
+    @field_validator('name', 'surname')
+    def name_validator(value: str):
+        """ Проверяет, что выбранные поля содержут
+         только символы русского и латинского алфавита,
+         а также не являются пустыми. 
+        """
+
+        if value.isspace():
+            raise HTTPException(
+                status_code=422,
+                detail=f"Поле {value} не может быть пустым."
+            )
+
+        if not NAMING_PATTERN.match(value):
+            raise HTTPException(
+                status_code=422,
+                detail=f"Поле {value} содержит недопустимые символы."
+            )
+        return value
