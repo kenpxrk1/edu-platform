@@ -37,4 +37,6 @@ class AuthConfig(BaseSettings):
     def ACCESS_TOKEN_EXPIRE_MINUTES(self):
         return self.__ACCESS_TOKEN_EXPIRE_MINUTES
     
-    model_config = SettingsConfigDict(env_file=ENV_FILE)
+    model_config = SettingsConfigDict(env_file=ENV_FILE, extra='allow')
+
+auth_config = AuthConfig()
