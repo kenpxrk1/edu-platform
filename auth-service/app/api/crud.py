@@ -19,9 +19,9 @@ router = APIRouter(prefix="/users", tags=["Users"])
 async def get_users(
     session: AsyncSession = Depends(db_manager.get_async_session),
     user_service: UserService = Depends(get_user_service),
-    current_user: GetUser = Depends(auth_service.get_current_user)
+    current_user: GetUser = Depends(auth_service.get_current_user),
 ) -> list[GetUser]:
-    """ Возвращает список всех пользователей """
+    """Возвращает список всех пользователей"""
     users = await user_service.get_users(session)
     return users
 
@@ -32,22 +32,18 @@ async def create_user(
     session: AsyncSession = Depends(db_manager.get_async_session),
     user_service: UserService = Depends(get_user_service),
 ) -> None:
-    """ Создает нового пользователя в базе данных """
-    return await user_service.create_user(
-        data=user_data,
-        session=session
-    )
+    """Создает нового пользователя в базе данных"""
+    return await user_service.create_user(data=user_data, session=session)
+
 
 @router.post("/login", response_model=Token)
 async def login_for_access_token(
     form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
     auth_service: AuthService = Depends(get_auth_service),
-    session: AsyncSession = Depends(db_manager.get_async_session)
+    session: AsyncSession = Depends(db_manager.get_async_session),
 ):
     user = await auth_service.authenticate_user(
-        email=form_data.username, 
-        password=form_data.password, 
-        session=session
+        email=form_data.username, password=form_data.password, session=session
     )
     if not user:
         raise HTTPException(
@@ -63,22 +59,22 @@ async def login_for_access_token(
 
 @router.get("/get_user_by_id/{id}", response_model=GetUser, status_code=200)
 async def get_user_by_id(
-    id: int, 
+    id: int,
     user_service: UserService = Depends(get_user_service),
-    session: AsyncSession = Depends(db_manager.get_async_session)
+    session: AsyncSession = Depends(db_manager.get_async_session),
 ):
     user = await user_service.get_user_by_id(id=id, session=session)
-    return user 
+    return user
 
 
 @router.get("/get_user_by_email/{email}", response_model=GetUser, status_code=200)
 async def get_user_by_email(
     email: EmailStr,
     user_service: UserService = Depends(get_user_service),
-    session: AsyncSession = Depends(db_manager.get_async_session)
+    session: AsyncSession = Depends(db_manager.get_async_session),
 ):
     user = await user_service.get_user_by_email(email=email, session=session)
-    return user 
+    return user
 
 
 @router.put("/{id}", response_model=GetUser, status_code=status.HTTP_201_CREATED)
@@ -87,14 +83,11 @@ async def update_user(
     id: int,
     user_service: UserService = Depends(get_user_service),
     session: AsyncSession = Depends(db_manager.get_async_session),
-    current_user: GetUser = Depends(auth_service.get_current_user)
-
+    current_user: GetUser = Depends(auth_service.get_current_user),
 ) -> GetUser:
-    
+
     updated_user = await user_service.update_user(
-        id=id, 
-        data_to_update=data_to_update,
-        session=session
+        id=id, data_to_update=data_to_update, session=session
     )
 
     return updated_user
@@ -105,9 +98,6 @@ async def delete_user(
     id: int,
     user_service: UserService = Depends(get_user_service),
     session: AsyncSession = Depends(db_manager.get_async_session),
-    current_user: GetUser = Depends(auth_service.get_current_user) 
+    current_user: GetUser = Depends(auth_service.get_current_user),
 ) -> None:
-    return await user_service.delete_user(
-        id=id,
-        session=session
-    )
+    return await user_service.delete_user(id=id, session=session)

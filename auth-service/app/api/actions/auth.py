@@ -12,7 +12,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.utils.hasher import Hasher
 
 
-class AuthService():
+class AuthService:
     oauth2_scheme = OAuth2PasswordBearer(tokenUrl="users/login")
     SECRET_KEY: str = auth_config.SECRET_KEY
     ALGORITHM: str = auth_config.ALGORITHM
@@ -62,10 +62,9 @@ class AuthService():
         token: str = Depends(oauth2_scheme),
         session: AsyncSession = Depends(db_manager.get_async_session),
     ) -> GetUser:
-        
-        """ 
-        Call this method allows you to get current user by verifying the token, 
-        and as dependency makes endpoint protected.\n 
+        """
+        Call this method allows you to get current user by verifying the token,
+        and as dependency makes endpoint protected.\n
         Args:\n
         token (str): auth token. example "eyJhbGciOiJIUzI1Ni....AsdEWQ"\n
         session (AsyncSession): Database session.\n
@@ -73,9 +72,9 @@ class AuthService():
         HTTPException: HTTP_401_UNAUTHORIZED.\n
         Returns:\n
         Validated UserModer
-  
+
         """
-        
+
         async with session.begin():
 
             form_data_exception = HTTPException(

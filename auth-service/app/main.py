@@ -14,7 +14,7 @@ from app.api.crud import router
 #     print(f"Name: {db_config.DB_NAME}")
 #     print(f"URL: {db_config.DB_URL}")
 #     yield
-    
+
 
 app = FastAPI()
 
