@@ -40,7 +40,7 @@ class AuthService:
         encoded_jwt = jwt.encode(to_encode, self.SECRET_KEY, algorithm=self.ALGORITHM)
         return encoded_jwt
 
-    async def verify_access_token(self, token: str, form_data_exception) -> TokenData:
+    async def verify_access_token(self, token: str, form_data_exception=None) -> TokenData:
 
         try:
             payload = jwt.decode(
@@ -56,6 +56,18 @@ class AuthService:
             raise form_data_exception
 
         return token_data
+    
+
+    async def activate_user(
+            self,
+            id: int,
+            session: AsyncSession
+    ) -> None:
+        async with session.begin():
+            user_repo = UserRepo(session=session)
+            await user_repo.activate_user(id=id)
+
+
 
     async def get_current_user(
         self,

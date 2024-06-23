@@ -1,15 +1,16 @@
 from datetime import timedelta
 from typing import Annotated
 from fastapi.security import OAuth2PasswordRequestForm
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import EmailStr
-from app.schemas.user import GetUser, CreateUser, UpdateUser, LoginUser
+from app.schemas.user import GetUser, CreateUser, UpdateUser
 from app.schemas.token import Token
 from sqlalchemy.ext.asyncio import AsyncSession
 from .deps import get_auth_service, get_user_service, auth_service
 from .actions.auth import AuthService
 from .actions.user import UserService
 from app.core.db import db_manager
+from app.bg_tasks.conf import send_verify_token
 
 
 router = APIRouter(prefix="/users", tags=["Users"])
@@ -31,9 +32,37 @@ async def create_user(
     user_data: CreateUser,
     session: AsyncSession = Depends(db_manager.get_async_session),
     user_service: UserService = Depends(get_user_service),
+    auth_service: AuthService = Depends(get_auth_service)
 ) -> None:
     """Создает нового пользователя в базе данных"""
-    return await user_service.create_user(data=user_data, session=session)
+    user = await user_service.create_user(data=user_data, session=session)
+    token = auth_service.create_access_token(
+        data=({"id": str(user.id), "role": user.role}),
+        expires_delta=timedelta(minutes=10),
+    )
+    send_verify_token.delay(
+        email=user.email,
+        token=token
+    )
+    return {
+        "msg": f"Confirm message sent to {user.email}"
+    }
+
+
+@router.get("/verify")
+async def verify_email(
+    token: str,
+    session: AsyncSession = Depends(db_manager.get_async_session),
+    auth_service: AuthService = Depends(get_auth_service)
+):
+    token_data = await auth_service.verify_access_token(token=token)
+    await auth_service.activate_user(
+        id=token_data.id,
+        session=session
+    )
+    return {
+        "msg": "Email successfully confirmed!"
+    }
 
 
 @router.post("/login", response_model=Token)
@@ -45,6 +74,11 @@ async def login_for_access_token(
     user = await auth_service.authenticate_user(
         email=form_data.username, password=form_data.password, session=session
     )
+    if user.is_active == False:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="You should verificate your email address"
+        )
     if not user:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,

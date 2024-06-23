@@ -8,12 +8,13 @@ from fastapi import HTTPException
 
 class UserService:
 
-    async def create_user(self, data: CreateUser, session: AsyncSession) -> None:
+    async def create_user(self, data: CreateUser, session: AsyncSession) -> GetUser:
         async with session.begin():
             data = data.model_dump()
             data["password"] = Hasher.hash_password(data["password"])
             user_repo = UserRepo(session)
-            await user_repo.create_user(user_data=data)
+            user = await user_repo.create_user(user_data=data)
+            return GetUser.model_validate(user, from_attributes=True)
 
     async def get_users(self, session: AsyncSession) -> list[GetUser]:
         async with session.begin():
@@ -43,12 +44,10 @@ class UserService:
         async with session.begin():
             user_repo = UserRepo(session)
             user_data = await user_repo.get_user_by_email(email=email)
-            print("Trouble after getting the user_data", user_data)
             if user_data is None:
                 raise HTTPException(
                     status_code=404, detail=f"User with id: {email} has not found"
                 )
-            print("Trouble before validating the user_data", user_data)
             user = GetUser.model_validate(user_data, from_attributes=True)
             return user
 

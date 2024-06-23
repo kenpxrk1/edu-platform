@@ -47,3 +47,20 @@ class AuthConfig(BaseSettings):
 
 
 auth_config = AuthConfig()
+
+
+class EmailConfig(BaseSettings):
+    APP_EMAIL: str
+    SECRET_EMAIL: str
+
+    @property
+    def APP_EMAIL(self):
+        return self.APP_EMAIL
+    
+    @property
+    def SECRET_EMAIL(self):
+        return self.SECRET_EMAIL
+    
+    model_config = SettingsConfigDict(env_file=ENV_FILE, extra="allow")
+
+email_config = EmailConfig()

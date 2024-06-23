@@ -15,14 +15,15 @@ class UserRepo:
         self.model = UserOrm
 
     async def create_user(self, user_data: dict) -> None:
-        # try:
-        insert_query = insert(self.model).values(**user_data)
-        await self.session.execute(insert_query)
-        await self.session.commit()
-        # except IntegrityError:
-        #     raise HTTPException(
-        #             status_code=400, detail=f"Пользователь с таким адресом уже существует"
-        #         )
+        try:
+            insert_query = insert(self.model).values(**user_data).returning(self.model)
+            user = await self.session.execute(insert_query)
+            await self.session.commit()
+            return user.scalar_one()
+        except IntegrityError:
+            raise HTTPException(
+                    status_code=400, detail=f"Пользователь с таким адресом уже существует"
+                )
 
     async def get_user(self, user_id: int) -> ScalarResult | None:
         select_query = select(self.model).where(self.model.id == user_id)
@@ -67,4 +68,12 @@ class UserRepo:
             )
         delete_query = delete(self.model).where(self.model.id == id)
         await self.session.execute(delete_query)
+        await self.session.commit()
+
+
+    async def activate_user(self, id: int) -> None:
+        update_query = (
+            update(self.model).where(self.model.id == id).values(is_active=True)
+        )
+        await self.session.execute(update_query)
         await self.session.commit()
